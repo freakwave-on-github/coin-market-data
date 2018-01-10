@@ -18,41 +18,53 @@ const CONFIG = [
   {
     'name' : 'liquichat',
     'url' : 'https://liqui.io/',
-    'selector' : 'p.message-text'
+    'selector' : 'p.message-text',
+    'requireReload' : false
   },
   {
     'name' : 'tradingviewchat',
     'url' : 'https://www.tradingview.com/chatwidgetembed/?locale=en#bitcoin',
-    'selector' : 'div.ch-item-text'
+    'selector' : 'div.ch-item-text',
+    'requireReload' : false
+  },
+  {
+    'name' : 'wexnzchat',
+    'url' : 'https://wex.nz',
+    'selector' : 'p.chatmessage',
+    'requireReload' : true
   }
 ];
 const LIQUI_CHAT        = CONFIG[0];
 const TRADINGVIEW_CHAT  = CONFIG[1];
+const WEXNZ_CHAT  		= CONFIG[2];
+
+
+
+
 
 
 var CHAT = TRADINGVIEW_CHAT;
 
 process.argv.forEach(function (val, index, array) {
   console.log(index, val, array);
+  const USAGE = 'Usage "node grabchat.js LIQUI|TRADINGVIEW|WEXNZ"';
   if (array.length === 3){
     if (array[2] ==='LIQUI'){
       CHAT = LIQUI_CHAT;
     }else if (array[2] ==='TRADINGVIEW'){
-      CHAT = TRADINGVIEW_CHAT;
+        CHAT = TRADINGVIEW_CHAT;
+    }else if (array[2] ==='WEXNZ'){
+        CHAT = WEXNZ_CHAT;
     }else{
-      console.log('Usage "node grabchat.js LIQUI|TRADINGVIEW"');
+      console.log(USAGE);
       process.exit(1);
     }
   }else{
-    console.log('Usage "node grabchat.js LIQUI|TRADINGVIEW"');
+    console.log(USAGE);
     process.exit(1);
   }
 
 });
-
-
-
-
 
 
 // elastic defs
@@ -62,8 +74,6 @@ var client = new elasticsearch.Client({
 // log: 'trace'
   log: 'info'
 });
-
-
 
 
 // CHATGRABBER
@@ -121,9 +131,11 @@ async function addLatestChatItems(page, chat){
       console.log(e);
     })
     .then(r => {
-      //
     });
     await page.waitFor(50);
+    if (CHAT.requireReload === true){
+  	  await page.goto(CHAT.url);
+    }
     // process.stdout.write('.');
   }
   await browser.close();
